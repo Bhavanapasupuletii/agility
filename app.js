@@ -265,21 +265,40 @@ function executeTransaction() {
 }
 
 // Optimized Camera Viewfinder Initialization Pipeline
+// Optimized Camera Viewfinder Initialization Pipeline with Fixed Layout Timing
 function toggleCamera() {
     let container = document.getElementById('scanner-container');
     if (container.classList.contains('hidden')) {
+        // Step 1: Make the container visible FIRST so it has physical layout width/height
         container.classList.remove('hidden');
         
-        // Target high capture rate for direct mobile scans
-        html5QrcodeScanner = new Html5QrcodeScanner(
-            "interactive-reader", 
-            { fps: 20, qrbox: { width: 280, height: 160 }, aspectRatio: 1.0 }
-        );
-        
-        html5QrcodeScanner.render((text) => {
-            processScan(text);
-            stopCamera();
-        }, (error) => {});
+        // Step 2: Initialize the scanner object on the active visible layout element
+        try {
+            html5QrcodeScanner = new Html5QrcodeScanner(
+                "interactive-reader", 
+                { 
+                    fps: 20, 
+                    qrbox: function(viewfinderWidth, viewfinderHeight) {
+                        return {
+                            width: Math.min(viewfinderWidth * 0.8, 280),
+                            height: Math.min(viewfinderHeight * 0.6, 160)
+                        };
+                    },
+                    aspectRatio: 1.0 
+                },
+                /* verbose= */ false
+            );
+            
+            html5QrcodeScanner.render((text) => {
+                processScan(text);
+                stopCamera();
+            }, (error) => {
+                // Silent catch for continuous frame tracking scans
+            });
+        } catch (err) {
+            console.error("Camera tracking setup failed:", err);
+            alert("Failed to initialize camera viewport hardware.");
+        }
     } else {
         stopCamera();
     }
