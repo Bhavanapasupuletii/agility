@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agility - Pocket POS Platform</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Reenie+Beanie&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@html5-qrcode/html5-qrcode"></script>
+    <style>
+        :root {
+            --swift-cream: #F9F8F3;
+            --swift-blue: #3E5AFA;
+            --swift-blue-dark: #2A43D1;
+        }
+        .bg-swift-cream { background-color: var(--swift-cream); }
+        .text-swift-blue { color: var(--swift-blue); }
+        .bg-swift-blue { background-color: var(--swift-blue); }
+        .bg-swift-blue:hover { background-color: var(--swift-blue-dark); }
+        .border-swift-blue { border-color: var(--swift-blue); }
+        .focus-swift-blue:focus { outline-color: var(--swift-blue); }
+        
+        .font-logo { font-family: 'Playfair Display', serif; }
+        .font-cursive { font-family: 'Reenie+Beanie', cursive; font-size: 1.5rem; line-height: 1; }
+    </style>
+</head>
+<body class="bg-swift-cream font-sans text-slate-800">
+
+    <div id="license-gate-screen" class="fixed inset-0 bg-slate-900 z-[9999] flex items-center justify-center p-4">
+        <div class="bg-white max-w-md w-full p-8 rounded-2xl shadow-2xl space-y-6 text-center border border-slate-100">
+            <div>
+                <h1 class="text-3xl font-bold tracking-tight font-logo text-swift-blue">Agility</h1>
+                <p class="text-xs text-slate-400 font-mono mt-1">Branch Client Activation Module</p>
+            </div>
+            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 text-left space-y-2">
+                <span class="text-[10px] uppercase font-bold tracking-wider text-slate-400 block">Your Local System Machine Fingerprint</span>
+                <div id="display-machine-fingerprint" class="font-mono text-sm bg-white p-2 border rounded text-slate-700 select-all font-bold tracking-wide">GENERATING...</div>
+                <p class="text-[11px] text-slate-500 leading-relaxed">Share this machine fingerprint string with the system administrator to obtain your secure branch authorization execution key key.</p>
+            </div>
+            <div class="space-y-2 text-left">
+                <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider">Enter Secure Activation License Key</label>
+                <input type="text" id="license-key-entry" placeholder="Paste cryptographic token string here" 
+                    class="w-full px-4 py-3 border border-slate-200 rounded-xl focus-swift-blue font-mono text-sm tracking-widest text-center uppercase bg-slate-50">
+            </div>
+            <button onclick="validateLicenseToken()" class="w-full py-3 bg-swift-blue text-white font-bold rounded-xl shadow-md transition transform active:scale-95">Verify & Initialize Client Instance</button>
+            <p class="text-[10px] text-slate-400 font-cursive tracking-widest">The Intelligence that Lives in Your Pocket, Not the Cloud</p>
+        </div>
+    </div>
+
+    <div id="main-application-workspace" class="opacity-10 pointer-events-none transition-all duration-300">
+        
+        <header class="bg-white border-b border-slate-200 text-slate-900 shadow-sm p-4 sticky top-0 z-50 flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <span class="font-cursive text-swift-blue tracking-wider font-bold">Do it</span>
+                <div class="text-center px-1">
+                    <h1 id="display-store-name" class="text-2xl font-bold tracking-tight font-logo text-swift-blue">Agility</h1>
+                    <p id="display-store-sub" class="text-[10px] text-slate-500 font-mono">Tirupati, AP | GSTIN: 37AAAAA0000A1Z1</p>
+                </div>
+                <span class="font-cursive text-swift-blue tracking-wider font-bold">with ease</span>
+            </div>
+            <div class="flex gap-1.5">
+                <button onclick="switchView('billing')" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-md text-xs font-bold transition">Counter</button>
+                <button onclick="switchView('inventory')" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-md text-xs font-bold transition">Offers & Taxes</button>
+                <button onclick="switchView('branding')" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-md text-xs font-bold transition">Identity Setup</button>
+            </div>
+        </header>
+
+        <main class="max-w-4xl mx-auto p-4 pb-32">
+            <section id="view-billing" class="space-y-4">
+                <div id="scanner-container" class="hidden bg-white p-4 rounded-xl shadow-md border-2 border-swift-blue overflow-hidden transition-all duration-300">
+                    <div class="text-sm font-bold text-center mb-2 text-swift-blue">Hold barcode steady inside the viewfinder box below</div>
+                    <div id="interactive-reader" class="w-full max-w-md mx-auto rounded-lg overflow-hidden"></div>
+                </div>
+
+                <div class="flex gap-2 bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                    <input type="text" id="barcode-input" placeholder="Scan barcode or input item PLU (Try: 101 or 890103)" 
+                        class="flex-1 px-4 py-2 border border-slate-300 rounded-lg focus-swift-blue text-sm"
+                        onkeypress="if(event.key === 'Enter') processScan(this.value)">
+                    <button onclick="toggleCamera()" class="px-5 py-2 bg-swift-blue text-white rounded-lg font-bold transition text-sm flex items-center gap-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                        Camera
+                    </button>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 divide-y divide-slate-100" id="cart-container">
+                    <div class="p-8 text-center text-slate-400">Cart Empty. Ready for incoming transactions.</div>
+                </div>
+            </section>
+
+            <section id="view-inventory" class="hidden space-y-4">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400 mb-2">Bulk Spreadsheet Data Onboarding</h3>
+                    <p class="text-xs text-slate-500 mb-4">Upload store stock sheets directly. Format: <code class="bg-slate-100 p-0.5 rounded text-swift-blue">Barcode, Item Name, MRP, Discount, HSN, GST</code></p>
+                    <div class="flex items-center gap-3">
+                        <input type="file" id="csv-file-input" accept=".csv" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200 cursor-pointer" />
+                        <button onclick="importBulkCSV()" class="px-4 py-2 bg-slate-900 text-white font-bold rounded-lg hover:bg-black transition text-xs whitespace-nowrap">Upload Sheet</button>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400 mb-2">Individual Stock Customization</h3>
+                    <div class="grid grid-cols-2 gap-3 md:grid-cols-3">
+                        <input type="text" id="inv-barcode" placeholder="Barcode / PLU" class="p-2 border border-slate-200 rounded-md text-sm">
+                        <input type="text" id="inv-name" placeholder="Item Name" class="p-2 border border-slate-200 rounded-md text-sm">
+                        <input type="number" id="inv-mrp" placeholder="MRP (₹)" class="p-2 border border-slate-200 rounded-md text-sm">
+                        <input type="number" id="inv-discount" placeholder="Discount (%)" class="p-2 border border-slate-200 rounded-md text-sm">
+                        <input type="text" id="inv-hsn" placeholder="HSN Code" class="p-2 border border-slate-200 rounded-md text-sm">
+                        <input type="number" id="inv-gst" placeholder="GST Slab (%)" class="p-2 border border-slate-200 rounded-md text-sm">
+                    </div>
+                    <button onclick="saveProductConfig()" class="mt-4 px-4 py-2 bg-swift-blue text-white font-bold rounded-lg transition w-full text-sm">Save and Sync Locally</button>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm">
+                            <thead>
+                                <tr class="bg-slate-50 text-slate-500 uppercase text-xs border-b border-slate-100">
+                                    <th class="p-2">Barcode</th>
+                                    <th class="p-2">Item Name</th>
+                                    <th class="p-2">MRP</th>
+                                    <th class="p-2">Offer Disc</th>
+                                    <th class="p-2">GST</th>
+                                    <th class="p-2">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inventory-table-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section id="view-branding" class="hidden bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-4">
+                <h3 class="text-lg font-bold text-slate-900">White-Label Customization Setup</h3>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">Company/Store Name</label>
+                    <input type="text" id="cfg-name" class="w-full p-2 border border-slate-200 rounded-md text-sm focus-swift-blue">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">Address Location Outpost</label>
+                    <input type="text" id="cfg-address" class="w-full p-2 border border-slate-200 rounded-md text-sm focus-swift-blue">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">Corporate GSTIN Identity</label>
+                    <input type="text" id="cfg-gstin" class="w-full p-2 border border-slate-200 rounded-md text-sm focus-swift-blue">
+                </div>
+                <button onclick="saveBrandingConfig()" class="w-full py-2 bg-swift-blue text-white font-bold rounded-lg transition text-sm">Save Branding Identity</button>
+            </section>
+        </main>
+
+        <footer class="fixed bottom-0 left-0 right-0 bg-white shadow-[0_-4px_12px_rgba(0,0,0,0.04)] border-t border-slate-200 p-4 z-40">
+            <div class="max-w-4xl mx-auto flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+                <div id="tax-matrix-summary" class="text-[11px] space-y-0.5 text-slate-500 flex-1 font-mono"></div>
+                <div class="flex items-center justify-between md:justify-end gap-6 border-t md:border-t-0 pt-2 md:pt-0">
+                    <div class="text-right">
+                        <span class="text-[10px] font-bold text-slate-400 block tracking-wider">NET BILL TOTAL</span>
+                        <span id="grand-total-display" class="text-2xl font-black text-swift-blue">₹0.00</span>
+                    </div>
+                    <button onclick="executeTransaction()" id="print-btn" disabled class="px-6 py-2.5 bg-slate-200 text-slate-400 font-bold rounded-xl cursor-not-allowed transition text-sm shadow-sm">Submit & Print</button>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
